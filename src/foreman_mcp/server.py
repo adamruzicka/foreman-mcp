@@ -6,9 +6,11 @@ import anyio
 import click
 import mcp.types as types
 from mcp.server.lowlevel import Server
+from mcp.server.sse import SseServerTransport
 from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 from starlette.applications import Starlette
-from starlette.routing import Mount
+from starlette.responses import Response
+from starlette.routing import Mount, Route
 from starlette.types import Receive, Scope, Send
 
 logger = logging.getLogger(__name__)
@@ -125,11 +127,24 @@ def main(
             finally:
                 logger.info("Application shutting down...")
 
+    sse = SseServerTransport("/messages/")
+
+    async def handle_sse(request):
+        async with sse.connect_sse(
+            request.scope, request.receive, request._send
+        ) as streams:
+            await app.run(
+                streams[0], streams[1], app.create_initialization_options()
+            )
+        return Response()
+
     # Create an ASGI application using the transport
     starlette_app = Starlette(
         debug=True,
         routes=[
             Mount("/mcp", app=handle_streamable_http),
+            Route("/sse", endpoint=handle_sse),
+            Mount("/messages/", app=sse.handle_post_message)
         ],
         lifespan=lifespan,
     )
