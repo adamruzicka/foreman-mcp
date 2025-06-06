@@ -3,6 +3,7 @@ import logging
 from collections.abc import AsyncIterator
 
 import anyio
+import apypie
 import click
 import mcp.types as types
 from mcp.server.lowlevel import Server
@@ -29,10 +30,27 @@ logger = logging.getLogger(__name__)
     default=False,
     help="Enable JSON responses instead of SSE streams",
 )
+@click.option(
+    "--foreman-url",
+    help="Foreman URL to connect to",
+)
+@click.option(
+    "--foreman-username",
+    default="admin",
+    help="Username for Foreman API authentication",
+)
+@click.option(
+    "--foreman-password",
+    default="changeme",
+    help="Password for Foreman API authentication",
+)
 def main(
     port: int,
     log_level: str,
     json_response: bool,
+    foreman_url: str,
+    foreman_username: str,
+    foreman_password: str,
 ) -> int:
     # Configure logging
     logging.basicConfig(
@@ -41,6 +59,13 @@ def main(
     )
 
     app = Server("mcp-streamable-http-stateless-demo")
+    foreman = apypie.ForemanApi(
+        uri=foreman_url,
+        username=foreman_username,
+        password=foreman_password,
+        verify_ssl=False
+    )
+
 
     @app.call_tool()
     async def call_tool(
