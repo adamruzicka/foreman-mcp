@@ -1,0 +1,17 @@
+[project]
+name = "foreman-mcp"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Adam Ruzicka", email = "aruzicka@redhat.com" }
+]
+requires-python = ">=3.13"
+dependencies = []
+
+[project.scripts]
+foreman-mcp = "foreman_mcp:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
