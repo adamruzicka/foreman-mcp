@@ -112,6 +112,44 @@ def main(
                     text=response.text,
                 )
             ]
+        elif name == 'list-foreman-resources':
+            return [types.TextContent(type="text", text="\n".join(foreman.resources))]
+        elif name == 'get-resource-api-documentation':
+            resource = arguments.get("resource")
+            if not resource:
+                raise ValueError("Missing 'resource' argument for list-resource-search-options")
+
+            # TODO: This should probably live in apypie
+            url = f"{foreman_url.rstrip('/')}/apidoc/v2/{resource}/index.en.html"
+            async with httpx.AsyncClient(verify=False) as client:
+                response = await client.get(url, auth=(foreman_username, foreman_password))
+                response.raise_for_status()
+            return [
+                types.TextContent(
+                    type="text",
+                    text=response.text
+                )
+            ]
+        elif name == 'search-resource':
+            resource = arguments.get("resource")
+            if not resource:
+                raise ValueError("Missing 'resource' argument for search-resource")
+            
+            params = {
+                k: v for k, v in {
+                    "search": arguments.get("search"),
+                    "organization_id": arguments.get("organization_id"),
+                }.items() if v is not None
+            }
+            results = foreman.resource_action(resource, 'index', params)
+            return [
+                types.TextContent(
+                    type="text",
+                    text=json.dumps(results['results'], indent=2)
+                )
+            ]
+
+        raise ValueError(f"Unknown tool: {name}")
 
     @app.list_tools()
     async def list_tools() -> list[types.Tool]:
@@ -178,6 +216,49 @@ def main(
                 description="Retrieves the documentation for report templates from Foreman in HTML format",
                 inputSchema={
                     "type": "object",
+                }
+            ),
+            types.Tool(
+                name="list-foreman-resources",
+                description="Lists all available Foreman API resources",
+                inputSchema={
+                    "type": "object",
+                }
+            ),
+            types.Tool(
+                name="get-resource-api-documentation",
+                description="Retrieves the documentation for a specific Foreman resource",
+                inputSchema={
+                    "type": "object",
+                    "required": ["resource"],
+                    "properties": {
+                        "resource": {
+                            "type": "string",
+                            "description": "Name of the Foreman resource to get documentation for"
+                        }
+                    }
+                }
+            ),
+            types.Tool(
+                name="search-resource",
+                description="Searches a specific Foreman resource using the provided search query",
+                inputSchema={
+                    "type": "object",
+                    "required": ["resource", "search"],
+                    "properties": {
+                        "resource": {
+                            "type": "string",
+                            "description": "Name of the Foreman resource to search"
+                        },
+                        "search": {
+                            "type": "string",
+                            "description": "Search query to use for the resource"
+                        },
+                        "organization_id": {
+                            "type": "integer",
+                            "description": "Optional organization ID to filter the search"
+                        }
+                    }
                 }
             ),
         ]
