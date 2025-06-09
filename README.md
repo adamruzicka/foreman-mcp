@@ -15,14 +15,14 @@ Example vscode config
 # settings.json
 {
     "mcp": {
-        "servers": [
+        "servers": {
             "foreman-mcp-py": {
                 "type": "sse",
                 "url": "http://localhost:8080/mcp/sse",
                 
             }
-        ]
-    }
+        }
+    },
 }
 ```
 
