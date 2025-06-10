@@ -126,16 +126,29 @@ def main(
             resource = arguments.get("resource")
             if not resource:
                 raise ValueError("Missing 'resource' argument for list-resource-search-options")
+            methods = foreman.apidoc['docs']['resources'][resource]['methods']
+            index = next(x for x in methods if x['name'] == 'index')
+            if not index:
+                raise ValueError(f"No documentation found for resource '{resource}'")
 
-            # TODO: This should probably live in apypie
-            url = f"{foreman_url.rstrip('/')}/apidoc/v2/{resource}/index.en.html"
-            async with httpx.AsyncClient(verify=False) as client:
-                response = await client.get(url, auth=(foreman_username, foreman_password))
-                response.raise_for_status()
+            search_options = "\n\n".join([f"- Name: {s['name']}\n  Type: {s.get('type', s.get('values', ""))}" for s in index['metadata']['search']])
+
+            parameter_options = "\n\n".join([f"- Name: {p['name']}\n  Type: {p.get('type', 'string')}\n  Description: {p.get('description', '')}" for p in index['params']])
+
             return [
                 types.TextContent(
                     type="text",
-                    text=response.text
+                    text=f"""
+Returns a list of {resource} in Foreman.
+
+
+Parameters:
+{parameter_options}
+
+
+Search options:
+{search_options}
+                    """
                 )
             ]
         elif name == 'search-resource':
@@ -143,12 +156,15 @@ def main(
             if not resource:
                 raise ValueError("Missing 'resource' argument for search-resource")
             
-            params = {
+            explicit = {
                 k: v for k, v in {
+                    "params": arguments.get("params", {}),
                     "search": arguments.get("search"),
                     "organization_id": arguments.get("organization_id"),
                 }.items() if v is not None
             }
+            params = arguments.get("params", {})
+            params.update(explicit)
             results = foreman.resource_action(resource, 'index', params)
             return [
                 types.TextContent(
@@ -260,6 +276,12 @@ def main(
                         "resource": {
                             "type": "string",
                             "description": "Name of the Foreman resource to search"
+                        },
+                        "params": {
+                            "type": "object",
+                            "description": ("Additional parameters to pass to the resource search. "
+                              + "This is a dictionary of key-value pairs that will be passed as query parameters to the resource search. "
+                              + "The keys and values should match the resource's API documentation.")
                         },
                         "search": {
                             "type": "string",
