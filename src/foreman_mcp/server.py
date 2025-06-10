@@ -228,10 +228,10 @@ def main(
             ),
             types.Tool(
                 name="list-foreman-resources",
-                description="""Lists all available Foreman API resources, one per line for use with other tools.
-
-                The list does not contain any details about the resources, just their names. Additional details about each resource can be obtained using the `get-resource-api-documentation` tool.
-                """,
+                description=("Lists all available Foreman API resources, one per line for use with other tools."
+                  + "The list does not contain any details about the resources, just their names. "
+                  + "Additional details about each resource can be obtained using the `get-resource-api-documentation` tool."
+                  + "The resources can also be searched using the `search-resource` tool."),
                 inputSchema={
                     "type": "object",
                 }
@@ -263,7 +263,9 @@ def main(
                         },
                         "search": {
                             "type": "string",
-                            "description": "Search query to use for the resource"
+                            "description": ("Search query to use for the resource. "
+                              + "Individual resources may have different search syntax, refer to the resource documentation for details. "
+                              + "Logical operators such as AND and OR can be used to build complex queries.")
                         },
                         "organization_id": {
                             "type": "integer",
