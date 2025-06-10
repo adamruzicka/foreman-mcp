@@ -113,7 +113,15 @@ def main(
                 )
             ]
         elif name == 'list-foreman-resources':
-            return [types.TextContent(type="text", text="\n".join(foreman.resources))]
+            resource_list = "\n".join([f"- {resource}" for resource in foreman.resources])
+            text = f"""
+            The Foreman API provides the following resources:
+            {resource_list}
+
+            Details about each resource and how to search for them can be obtained using the `get-resource-api-documentation` tool.
+            You can also search for specific resources using the `search-resource` tool.
+            """
+            return [types.TextContent(type="text", text=text)]
         elif name == 'get-resource-api-documentation':
             resource = arguments.get("resource")
             if not resource:
@@ -220,7 +228,10 @@ def main(
             ),
             types.Tool(
                 name="list-foreman-resources",
-                description="Lists all available Foreman API resources",
+                description="""Lists all available Foreman API resources, one per line for use with other tools.
+
+                The list does not contain any details about the resources, just their names. Additional details about each resource can be obtained using the `get-resource-api-documentation` tool.
+                """,
                 inputSchema={
                     "type": "object",
                 }
