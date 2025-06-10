@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 @click.command()
 @click.option("--port", default=3000, help="Port to listen on for HTTP")
+@click.option("--host", default='127.0.0.1', help="Host to listen on for HTTP")
 @click.option(
     "--log-level",
     default="INFO",
@@ -49,6 +50,7 @@ logger = logging.getLogger(__name__)
     help="Password for Foreman API authentication",
 )
 def main(
+    host: str,
     port: int,
     log_level: str,
     json_response: bool,
@@ -155,7 +157,7 @@ Search options:
             resource = arguments.get("resource")
             if not resource:
                 raise ValueError("Missing 'resource' argument for search-resource")
-            
+
             explicit = {
                 k: v for k, v in {
                     "params": arguments.get("params", {}),
@@ -345,6 +347,6 @@ Search options:
 
     import uvicorn
 
-    uvicorn.run(starlette_app, host="127.0.0.1", port=port)
+    uvicorn.run(starlette_app, host=host, port=port)
 
     return 0
