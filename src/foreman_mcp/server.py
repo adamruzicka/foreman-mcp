@@ -169,7 +169,7 @@ Search options:
             return [
                 types.TextContent(
                     type="text",
-                    text=json.dumps(results['results'], indent=2)
+                    text=json.dumps(results, indent=2)
                 )
             ]
 
